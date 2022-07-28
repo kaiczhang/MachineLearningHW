@@ -1,0 +1,341 @@
+---
+title: "MachineLearningHW"
+author: 'Kai Zhang'
+date: "2022-07-28"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ch2 Q10
+
+
+#(A)
+```{r cars}
+library(ISLR2)
+library(dplyr)
+#?Boston
+```
+There are 506 rows and 13 columns. Each row represents a neighborhood of Boston. Each column represents the characteristics of that neighborhood. 
+
+
+#(B)
+```{r pressure, echo=TRUE}
+pairs(~indus+ptratio+lstat,data=Boston)
+```
+
+There seems to be a positive correlation between proportion of non-retail business acres per town and pupil-teacher ratio by town. 
+
+
+#(C)
+
+The following predictors should have a positive association with per capita crime rate:
+lstat, lower status of the population (percent).;
+dis, weighted mean of distances to five Boston employment centers. 
+
+The following predictors should have a negative association with per capita crime rate:
+zn,proportion of residential land zoned for lots over 25,000 sq.ft.; 
+indus, proportion of non-retail business acres per town. 
+Rm, average number of rooms per dwelling; 
+Ptratio, pupil-teacher ratio by town.; 
+medv, median value of owner-occupied homes in $1000s
+
+
+#(D)
+```{R}
+summary(Boston)
+```
+
+The highest per capita crime rate in a neighborhood is 89%. This is particularly high given the mean per capita crime rate of Boston is 3.6% with a median of 0.26%. The highest property tax rate of a neighborhood is 7.11%. This is relatively high because the mean Boston property tax rate is 4.08%. There is no neighborhood with particularly high pupil to teacher ratio. The highest is 1:22, with a mean of 1:18.5
+
+
+#(E)
+```{R}
+sum(Boston$chas == '1')
+```
+
+35 census tracts bound the Charles River
+
+#(F)
+
+The mean pupil to teacher ratio is 19.05:1
+
+
+#(G)
+```{R}
+which(Boston$medv==5)
+filter(Boston, medv==5)
+```
+
+The two neighborhoods have no residential lots that are over 25,000sqft, which is particularly low. They also have the most houses built before 1940. This makes sense because small lots and old buildings are correlated with low home prices.
+
+
+#(H)
+```{R}
+sum(Boston$rm>7)
+sum(Boston$rm>8)
+nb_rm8<-filter(Boston, rm>8)
+summary(nb_rm8)
+```
+
+64 tracts have an average room per dwelling over 7. 
+13 tracts have an average room per dwelling over 8. 
+Across the board, these 13 tracts have particularly lower crime rates, low-status population, non-retail business; and higher medium home price.
+
+
+## Chapter 3:#15
+
+#(a)
+```{R}
+attach(Boston)
+zn.fit <-lm(crim~zn, data = Boston)
+indus.fit <-lm(crim~indus, data = Boston)
+chas.fit <-lm(crim~chas, data = Boston)
+nox.fit <-lm(crim~nox, data = Boston)
+rm.fit <-lm(crim~rm, data = Boston)
+age.fit <-lm(crim~age, data = Boston)
+dis.fit <-lm(crim~dis, data = Boston)
+rad.fit <-lm(crim~rad, data = Boston)
+tax.fit <-lm(crim~tax, data = Boston)
+ptratio.fit <-lm(crim~ptratio, data = Boston)
+lstat.fit <-lm(crim~lstat, data = Boston)
+medv.fit <-lm(crim~medv, data = Boston)
+
+plot(zn,crim)
+abline(zn.fit)
+plot(indus,crim)
+abline(indus.fit)
+plot(chas,crim)
+abline(chas.fit)
+plot(nox,crim)
+abline(nox.fit)
+plot(rm,crim)
+abline(rm.fit)
+plot(age,crim)
+abline(age.fit)
+plot(dis,crim)
+abline(dis.fit)
+plot(rad,crim)
+abline(rad.fit)
+plot(tax,crim)
+abline(tax.fit)
+plot(ptratio,crim)
+abline(ptratio.fit)
+plot(lstat,crim)
+abline(lstat.fit)
+plot(medv,crim)
+abline(medv.fit)
+
+summary(zn.fit)$coefficients[2,4]
+summary(indus.fit)$coefficients[2,4]
+summary(chas.fit)$coefficients[2,4]
+summary(nox.fit)$coefficients[2,4]
+summary(rm.fit)$coefficients[2,4]
+summary(age.fit)$coefficients[2,4]
+summary(dis.fit)$coefficients[2,4]
+summary(rad.fit)$coefficients[2,4]
+summary(tax.fit)$coefficients[2,4]
+summary(ptratio.fit)$coefficients[2,4]
+summary(lstat.fit)$coefficients[2,4]
+summary(medv.fit)$coefficients[2,4]
+```
+
+There is a statically significant relationship between all the predictors and the response except for chas, of which the p-value is 0.2094
+
+
+#(b)
+```{R}
+mlm.fit <- lm(crim~.,data = Boston)
+summary(mlm.fit)
+```
+
+For zn, dis, rad, medv, we can reject the null hypothesis
+
+
+#(c)
+```{R}
+univeriate_reg <- vector("numeric",0)
+univeriate_reg <- c(univeriate_reg, zn.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, indus.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, chas.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, nox.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, rm.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, age.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, dis.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, rad.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, tax.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, ptratio.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, lstat.fit$coefficient[2])
+univeriate_reg <- c(univeriate_reg, medv.fit$coefficient[2])
+univeriate_reg
+multi_reg <- c(mlm.fit$coefficients)
+multi_reg <- multi_reg[-1]
+multi_reg
+plot(univeriate_reg,multi_reg)
+```
+
+The result from (a) and (b) are very different
+
+
+#(d)
+```{R}
+poly_zn <- lm(crim~ zn + I(zn^2) +I(zn^3))
+summary(poly_zn)
+poly_indus <- lm(crim~ indus + I(indus^2) +I(indus^3))
+summary(poly_indus)
+poly_nox <- lm(crim~ nox + I(nox^2) +I(nox^3))
+summary(poly_nox)
+poly_age <- lm(crim~ age + I(age^2) +I(age^3))
+summary(poly_age)
+poly_dis <- lm(crim~ dis + I(dis^2) +I(dis^3))
+summary(poly_dis)
+poly_rad <- lm(crim~ rad + I(rad^2) +I(rad^3))
+summary(poly_rad)
+poly_tax <- lm(crim~ tax + I(tax^2) +I(tax^3))
+summary(poly_tax)
+poly_ptratio <- lm(crim~ ptratio + I(ptratio^2) +I(ptratio^3))
+summary(poly_ptratio)
+poly_lstat <- lm(crim~ lstat + I(lstat^2) +I(lstat^3))
+summary(poly_lstat)
+poly_medv <- lm(crim~ medv + I(medv^2) +I(medv^3))
+summary(poly_medv)
+poly_chas <- lm(crim~ chas + I(chas^2) +I(chas^3))
+summary(poly_chas)
+```
+
+There is evidence of non-linear association between the response and variables: indus, nox, age, dis, ptratio
+
+
+
+##Chapter 6: #9
+
+
+
+
+##Chapter 6: #11
+
+
+
+
+
+##Chapter 8:#8
+
+#(A)
+```{R}
+library (tree)
+library(ISLR2)
+attach(Carseats)
+library(rpart)
+#?Carseats
+set.seed(2)
+
+train <- sample(1:nrow(Carseats), 200)
+carseats.test <- Carseats[-train, ]
+```
+
+#(B)
+```{R}
+tree.carseats <- tree(Sales ~ ., Carseats,
+                      subset = train)
+tree.pred <- predict(tree.carseats, newdata = Carseats[-train, ])
+mean((carseats.test$Sales-tree.pred)^2)
+```
+
+Test MSE = 4.47
+
+
+#(C) cross validation
+```{R}
+cv.carseats <- cv.tree(tree.carseats)
+cv.carseats
+prune.carseats <- prune.tree(tree.carseats,best = 6)
+prune.pred <- predict(prune.carseats, newdata = Carseats[-train, ])
+mean((carseats.test$Sales-prune.pred)^2)
+```
+
+No. Pruning the tree did not improve MSE. New MSE= 5
+
+
+#(D) Bagging
+```{R}
+library(randomForest)
+bag.carseats <- randomForest(Sales ~ ., data = Carseats,
+                           subset = train, mtry = 10, importance = TRUE)
+bag.carseats
+yhat.bag <- predict(bag.carseats, newdata = Carseats[-train, ])
+mean((carseats.test$Sales-yhat.bag)^2)
+importance(bag.carseats)
+```
+
+The bagging MSE=2.56. The most important variables are shelveLocation and Price
+
+
+#(E) Random Forest
+```{R}
+rf.carseats <- randomForest(Sales ~ ., data = Carseats,
+                          subset = train,mtry=3, importance = TRUE)
+yhat.rf <- predict(rf.carseats, newdata = Carseats[-train, ])
+mean((carseats.test$Sales-yhat.rf)^2)
+importance(rf.carseats)
+```
+The random forest MSE=3.28. The most important variables are Price and shelveLocation. The lower the m, the higher the error rate is. This makes sense because a lower m makes the model less complex. 
+
+
+
+##Chapter 8:#11
+
+#(a)
+```{R}
+library(gbm)
+attach(Caravan)
+library(caret)
+#?Caravan
+summary(Caravan)
+plot(Caravan$Purchase)
+set.seed(2)
+
+train = 1:1000
+Caravan$Purchase = ifelse(Caravan$Purchase == "Yes", 1, 0) 
+Caravan.train = Caravan[train,]
+Caravan.test = Caravan[-train,]
+```
+
+#(b)
+```{R}
+boost.caravan = gbm(Purchase ~ ., data = Caravan.train, distribution = "gaussian", n.trees = 1000, shrinkage = 0.01)
+summary(boost.caravan)
+```
+The most important predictors are PPERSAUT, MKOOPKLA, MOPLHOOG
+
+#(c)
+```{R}
+yhat.boost <- predict(boost.caravan,
+                      newdata = Caravan.test, n.trees = 1000, type='response')
+yhat.boost <- ifelse(yhat.boost > 0.2, 1, 0)
+table(Caravan.test$Purchase, yhat.boost)
+9/43
+```
+
+20.9% predicted to make a purchase do in fact make a purchase through boosting model
+
+```{R}
+logit.caravan <- glm(Purchase ~ ., data = Caravan.train, family = "binomial")
+yhat.glm <- predict(logit.caravan, Caravan.test, type = "response")
+yhat.glm <- ifelse(yhat.glm > 0.2, 1, 0)
+table(Caravan.test$Purchase, yhat.glm)
+58/408
+```
+14.2% predicted to make a purchase do in fact make a purchase through linear regression model
+
+
+##Chapter 10:#7
+
+
+
+
+
+
