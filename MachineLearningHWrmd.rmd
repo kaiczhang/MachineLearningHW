@@ -11,10 +11,10 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Ch2 Q10
+# Ch2 Q10
 
 
-#(A)
+### (A)
 ```{r cars}
 library(ISLR2)
 library(dplyr)
@@ -23,7 +23,7 @@ library(dplyr)
 There are 506 rows and 13 columns. Each row represents a neighborhood of Boston. Each column represents the characteristics of that neighborhood. 
 
 
-#(B)
+### (B)
 ```{r pressure, echo=TRUE}
 pairs(~indus+ptratio+lstat,data=Boston)
 ```
@@ -31,7 +31,7 @@ pairs(~indus+ptratio+lstat,data=Boston)
 There seems to be a positive correlation between proportion of non-retail business acres per town and pupil-teacher ratio by town. 
 
 
-#(C)
+### (C)
 
 The following predictors should have a positive association with per capita crime rate:
 lstat, lower status of the population (percent).;
@@ -45,7 +45,7 @@ Ptratio, pupil-teacher ratio by town.;
 medv, median value of owner-occupied homes in $1000s
 
 
-#(D)
+### (D)
 ```{R}
 summary(Boston)
 ```
@@ -53,19 +53,19 @@ summary(Boston)
 The highest per capita crime rate in a neighborhood is 89%. This is particularly high given the mean per capita crime rate of Boston is 3.6% with a median of 0.26%. The highest property tax rate of a neighborhood is 7.11%. This is relatively high because the mean Boston property tax rate is 4.08%. There is no neighborhood with particularly high pupil to teacher ratio. The highest is 1:22, with a mean of 1:18.5
 
 
-#(E)
+### (E)
 ```{R}
 sum(Boston$chas == '1')
 ```
 
 35 census tracts bound the Charles River
 
-#(F)
+### (F)
 
 The mean pupil to teacher ratio is 19.05:1
 
 
-#(G)
+### (G)
 ```{R}
 which(Boston$medv==5)
 filter(Boston, medv==5)
@@ -74,7 +74,7 @@ filter(Boston, medv==5)
 The two neighborhoods have no residential lots that are over 25,000sqft, which is particularly low. They also have the most houses built before 1940. This makes sense because small lots and old buildings are correlated with low home prices.
 
 
-#(H)
+### (H)
 ```{R}
 sum(Boston$rm>7)
 sum(Boston$rm>8)
@@ -87,9 +87,9 @@ summary(nb_rm8)
 Across the board, these 13 tracts have particularly lower crime rates, low-status population, non-retail business; and higher medium home price.
 
 
-## Chapter 3:#15
+# Chapter 3:#15
 
-#(a)
+### (a)
 ```{R}
 attach(Boston)
 zn.fit <-lm(crim~zn, data = Boston)
@@ -147,7 +147,7 @@ summary(medv.fit)$coefficients[2,4]
 There is a statically significant relationship between all the predictors and the response except for chas, of which the p-value is 0.2094
 
 
-#(b)
+### (b)
 ```{R}
 mlm.fit <- lm(crim~.,data = Boston)
 summary(mlm.fit)
@@ -156,7 +156,7 @@ summary(mlm.fit)
 For zn, dis, rad, medv, we can reject the null hypothesis
 
 
-#(c)
+### (c)
 ```{R}
 univeriate_reg <- vector("numeric",0)
 univeriate_reg <- c(univeriate_reg, zn.fit$coefficient[2])
@@ -181,7 +181,7 @@ plot(univeriate_reg,multi_reg)
 The result from (a) and (b) are very different
 
 
-#(d)
+### (d)
 ```{R}
 poly_zn <- lm(crim~ zn + I(zn^2) +I(zn^3))
 summary(poly_zn)
@@ -211,20 +211,183 @@ There is evidence of non-linear association between the response and variables: 
 
 
 
-##Chapter 6: #9
+# Chapter 6: #9
+
+### (A)
+install.packages('glmnet')
+```{r}
+library (glmnet)
+?College
+set.seed(2)
+train <- sample(1:nrow(College), 544)
+college.train <- College[train,]
+college.test <- College[-train, ]
+```
+
+### (B)
+```{r}
+c.lm <- lm(Apps~., data=college.train)
+summary(c.lm)
+c.pred <- predict(c.lm, newdata = college.test)
+sqrt(mean((college.test$Apps-c.pred)^2))
+```
+
+The Root Mean Squared Predicting error is 1051.461
+
+### (C)
+```{r}
+library (glmnet)
+set.seed(2)
+train.mat <- model.matrix (Apps ~., college.train)[, -1]
+test.mat <- model.matrix (Apps ~., college.test)[, -1]
+cv = cv.glmnet(train.mat,college.train$Apps,alpha=0)
+bestlam = cv$lambda.min
+bestlam
+
+y <- college.train$Apps
+ridge.mod <- glmnet (train.mat, y, alpha = 0,lamda=bestlam)
+ridge.pred = predict(ridge.mod,s=bestlam,newx = test.mat)
+sqrt(mean((ridge.pred - college.test$Apps)^2))
+```
+
+The RMSPE for Ridge is 1043.943. Lower than linear model. 
+
+
+### (D)
+```{r}
+set.seed(2)
+cv2 = cv.glmnet(train.mat,college.train$Apps,alpha=1)
+bestlam2 = cv2$lambda.min
+bestlam2
+
+lasso.mod = glmnet(train.mat,college.train$Apps,alpha=1)
+lasso.pred = predict(lasso.mod,s=bestlam2,newx=test.mat)
+sqrt(mean((lasso.pred - college.test$Apps)^2))
+```
+
+The RMSPE for Lasso is 1046.725. Lower than linear model but higher than Ridge. 
+
+
+### (E)
+install.packages('pls')
+```{r}
+library(pls)
+set.seed(2)
+pcr.fit=pcr(Apps~., data=college.train, scale=TRUE, validation="CV")
+summary(pcr.fit)
+```
+
+The lowest MSEP with PCR dimension reduction occurs at M=9
+```{r}
+pcr.pred=predict(pcr.fit,college.test,ncomp=9)
+sqrt(mean((pcr.pred-college.test$Apps)^2))
+```
+
+The RMSPE for PCR is 1172.356. Higher than all previous models.
+
+### (F)
+```{r}
+set.seed(2)
+pls.fit = plsr(Apps~., data=college.train, scale=TRUE,validation="CV")
+summary(pls.fit)
+```
+
+The lowest MSEP with PCR dimension reduction occurs at M=8
+
+```{r}
+pls.pred = predict(pls.fit, college.test, ncomp = 8)
+sqrt(mean((pls.pred - college.test$Apps)^2))
+```
+
+The M chosen by crossvalidation is M=8, and its test RMSE is 1032.622.
+
+
+### (G)
+```{r}
+r2 = sum((mean(college.test$Apps) - college.test$Apps)^2)
+plsr2 = sum((pls.pred - college.test$Apps)^2)
+1-(plsr2)/(r2)
+```
+There isn't significant amount of difference in test errors between the five approaches.
+The model with the best testing RMSE is PLS (1032.622)
+88.2% og the variance in application number can be explained by the PLS model.  
 
 
 
+# Chapter 6: #11
 
-##Chapter 6: #11
+### (A)
+```{r}
+library(ISLR2)
+attach(Boston)
+set.seed(1)
+train=sample(c(TRUE,FALSE),nrow(Boston),rep=TRUE)
+test=(!train)
+Boston.train = Boston[train,]
+Boston.test = Boston[test,]
+```
+## Lasso
+
+```{r}
+set.seed(1)
+train.mat = model.matrix(crim~., data = Boston.train)
+test.mat = model.matrix(crim~., data = Boston.test)
+cv.out = cv.glmnet(train.mat,Boston.train$crim,alpha=1)
+bestlam = cv.out$lambda.min
+bestlam
+lasso.mod = glmnet(train.mat,Boston.train$crim,alpha=1)
+lasso.pred = predict(lasso.mod,s=bestlam,newx=test.mat)
+mean((lasso.pred - Boston.test$crim)^2)
+```
+
+The test error of the lasso model fit with a lambda chosen by cross-validation is 49.40
+
+## Ridge
+
+```{r}
+cv = cv.glmnet(train.mat,Boston.train$crim,alpha=0)
+bestlam = cv$lambda.min
+bestlam
+ridge.mod = glmnet(train.mat,Boston.train$crim,alpha = 0)
+ridge.pred = predict(ridge.mod,s=bestlam,newx = test.mat)
+mean((ridge.pred - Boston.test$crim)^2)
+```
+The test error of the Ridge model fit with a lambda chosen by cross-validation is 49.91
+
+## PCR
+```{r}
+library(pls)
+set.seed(1)
+pcr.fit=pcr(crim~., data=Boston, scale=TRUE, validation="CV")
+summary(pcr.fit)
+```
+
+The lowest MSEP with PCR dimension reduction occurs at M=10
+```{r}
+pcr.pred=predict(pcr.fit,Boston.test,ncomp=10)
+mean((pcr.pred-Boston.test$crim)^2)
+```
+The test error of the PCR model fit with a lambda chosen by cross-validation is 50.65
+
+Test errors: Lasso(49.4), Ridge(49.91), PCR(50.65). Lasso is the best model. 
 
 
+## (B)
+
+Based on the information in part (A), the best model is Lasso Regression because of its low out of sample testing accuracy. However, the difference in MSE of three models are quite small(<1) and therefore I'd go ahead with eith or all three of the models.
+
+## (C)
+
+```{r}
+lasso.coef=predict(lasso.mod,type="coefficients",s=bestlam)
+lasso.coef
+```
+No, my chosen model does not involve all features. It involves four features: dis, rad, lstat, medv.
 
 
+# Chapter 8:#8
 
-##Chapter 8:#8
-
-#(A)
+### (A)
 ```{R}
 library (tree)
 library(ISLR2)
@@ -237,7 +400,7 @@ train <- sample(1:nrow(Carseats), 200)
 carseats.test <- Carseats[-train, ]
 ```
 
-#(B)
+### (B)
 ```{R}
 tree.carseats <- tree(Sales ~ ., Carseats,
                       subset = train)
@@ -248,7 +411,7 @@ mean((carseats.test$Sales-tree.pred)^2)
 Test MSE = 4.47
 
 
-#(C) cross validation
+### (C) cross validation
 ```{R}
 cv.carseats <- cv.tree(tree.carseats)
 cv.carseats
@@ -260,7 +423,7 @@ mean((carseats.test$Sales-prune.pred)^2)
 No. Pruning the tree did not improve MSE. New MSE= 5
 
 
-#(D) Bagging
+### (D) Bagging
 ```{R}
 library(randomForest)
 bag.carseats <- randomForest(Sales ~ ., data = Carseats,
@@ -274,7 +437,7 @@ importance(bag.carseats)
 The bagging MSE=2.56. The most important variables are shelveLocation and Price
 
 
-#(E) Random Forest
+### (E) Random Forest
 ```{R}
 rf.carseats <- randomForest(Sales ~ ., data = Carseats,
                           subset = train,mtry=3, importance = TRUE)
@@ -286,9 +449,9 @@ The random forest MSE=3.28. The most important variables are Price and shelveLoc
 
 
 
-##Chapter 8:#11
+# Chapter 8:#11
 
-#(a)
+### (a)
 ```{R}
 library(gbm)
 attach(Caravan)
@@ -304,14 +467,14 @@ Caravan.train = Caravan[train,]
 Caravan.test = Caravan[-train,]
 ```
 
-#(b)
+### (b)
 ```{R}
 boost.caravan = gbm(Purchase ~ ., data = Caravan.train, distribution = "gaussian", n.trees = 1000, shrinkage = 0.01)
 summary(boost.caravan)
 ```
 The most important predictors are PPERSAUT, MKOOPKLA, MOPLHOOG
 
-#(c)
+### (c)
 ```{R}
 yhat.boost <- predict(boost.caravan,
                       newdata = Caravan.test, n.trees = 1000, type='response')
@@ -332,7 +495,49 @@ table(Caravan.test$Purchase, yhat.glm)
 14.2% predicted to make a purchase do in fact make a purchase through linear regression model
 
 
-##Chapter 10:#7
+# Chapter 10:#7
+Fit a neural network to the Default data. Use a single hidden layer
+with 10 units, and dropout regularization. Have a look at Labs 10.9.1–
+10.9.2 for guidance. Compare the classification performance of your
+model with that of linear logistic regression.
+
+```
+install.packages("keras", repos = 'https://cloud.r-project.org')
+write('RETICULATE_AUTOCONFIGURE=FALSE', file = "~/.Renviron", append = TRUE)
+write(sprintf('RETICULATE_MINICONDA_PATH=%s',
+           normalizePath("~/islr-miniconda", winslash = "/", mustWork = FALSE)),
+   file = "~/.Renviron", append = TRUE)
+Sys.setenv(RETICULATE_AUTOCONFIGURE='FALSE',
+           RETICULATE_MINICONDA_PATH=normalizePath("~/islr-miniconda", winslash = "/", mustWork = FALSE))
+source(system.file("helpers", "install.R", package = "ISLR2"))
+install_miniconda()
+install_tensorflow()
+library(keras)
+library(ISLR2)
+
+
+
+Default <- na.omit (Default)
+n <- nrow (Default)
+set.seed (1)
+ntest <- trunc (n / 3)
+testid <- sample (1:n, ntest)
+
+x <- scale ( model.matrix (default~.-1, data = Default))
+y <- Default$default
+
+
+
+modnn <- keras_model_sequential () %>%
+  layer_dense (units = 50, activation = " relu ",
+    input_shape = ncol (x)) %>%
+  layer_dropout (rate = 0.4) %>%
+  layer_dense (units = 1)
+
+  
+```
+
+# 
 
 
 
